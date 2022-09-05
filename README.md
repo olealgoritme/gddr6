@@ -6,3 +6,5 @@
 
 ## TODO (never? no spare time)
 - add support for other variants
+
+![](https://github.com/olealgoritme/gddr6/gddr6_use.gif)
