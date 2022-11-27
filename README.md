@@ -1,10 +1,8 @@
-## GDDR6(X) temperature reader for linux
+## GDDR6(X) GPU Memory Temperature reader for linux
 
-## supports
-- rtx 3080 (ga102)
-- rtx 3070 (ga104)
-
-## TODO (never? no spare time)
-- add support for other variants
+## Support
+- RTX 4090 (AD102)
+- RTX 3080 (GA102)
+- RTX 3070 (GA104)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
