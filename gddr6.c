@@ -54,31 +54,31 @@ int main(int argc, char **argv) {
     }
 
     if (cnum >= nva_cardsnum) {
-            if (nva_cardsnum)
-                    fprintf (stderr, "No valid card.\n");
-            else
-                    fprintf (stderr, "No cards found.\n");
-                    return 1;
-    } 
+        if (nva_cardsnum)
+            fprintf (stderr, "No valid card.\n");
+        else
+            fprintf (stderr, "No cards found.\n");
+        return 1;
+    }
 
     if (mask & NVIDIA_MMIO_MASK_PMC) {
             uint32_t pmc_boot_0 = nva_rd32(cnum, NV_PMC_BOOT_0);
             struct pmc_id id;
             PMC_ID(pmc_boot_0, &id);
-            
+
             switch (id.gpu_id) {
               uint32_t offset;
               case 0xb72: { // ga102
                             // TODO: temps over 100 might fail
                     offset = 0x0000E2A8;
                     read_temps(cnum, offset);
-                    } 
+                    }
                     break;
 
               case 0xb74: { // ga104
                     offset = 0x0000EE50;
                     read_temps(cnum, offset);
-                    } 
+                    }
                     break;
 
               default:
