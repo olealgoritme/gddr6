@@ -1,92 +1,99 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
-#include "include/nva/nva.h"
-#include "include/ampere/ga100/dev_boot.h"
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <pci/pci.h>
 
-enum {
-    NVIDIA_MMIO_MASK_PMC        = 0x00000FFF,
-    NVIDIA_MMIO_MASK_PBUS       = 0x00001FFF,
-    NVIDIA_MASK_ALL             = 0x0000FFFF,
+struct device 
+{
+    uint32_t bar0;
+    uint32_t offset;
+    uint16_t dev_id;
+    const char *arch;
+    const char *name;
 };
 
-struct pmc_id {
-    uint8_t stepping;
-    uint8_t device_id;
-    uint16_t gpu_id;
+static struct device devices[] = {
+    { .bar0 = 0xEC000000, .offset = 0x0000E2A8, .dev_id = 0x2684, .arch = "AD102", .name =  "RTX 4090" },
+    { .bar0 = 0xFB000000, .offset = 0x0000E2A8, .dev_id = 0x1337, .arch = "GA102", .name =  "RTX 3090" },
+    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x1337, .arch = "GA104", .name =  "RTX 3070" },
 };
 
-void PMC_ID (uint32_t value,
-                 struct pmc_id *id) {
-    id->stepping   = (value << 0) >> 0;
-    id->device_id  = (value << 0) >> 12;
-    id->gpu_id     = (value << 0) >> 20;
+struct device * pci_detect_dev() 
+{
+    struct pci_access *pacc = NULL;
+    struct pci_dev *dev = NULL;
+    struct device *device = NULL;
+
+    pacc = pci_alloc();
+    pci_init(pacc);
+    pci_scan_bus(pacc);
+
+    for (dev = pacc->devices; dev; dev = dev->next) {
+        pci_fill_info(dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
+        for (uint32_t i = 0; i < 3; i++) {
+          if (dev->device_id == devices[i].dev_id) {
+            device = &devices[i]; 
+          }
+        }
+    }
+
+    pci_cleanup(pacc);
+    return device;
 }
 
-void read_temps(int cnum, uint32_t offset) {
-  uint32_t temp = 0;
-  while(1) {
-    temp = nva_rd32(cnum, offset);
-    temp = (temp & 0x00000fff) / 0x20;
-    fprintf(stderr, "\rGDDR6 VRAM Temp: %d°c", temp);
-    fflush(stderr);
-    sleep(1);
-  }
-}
+int main(int argc, char **argv)
+{
+    int fd;
+    int map_size = 4096UL;
+    void *map_base, *virt_addr;
+    uint32_t read_result, base_offset, temp;
+    uint32_t offset;
+    struct device *device = NULL; 
 
-int main(int argc, char **argv) {
-    int c;
-    int i;
-    int cnum = 0;
-    int mask = NVIDIA_MASK_ALL;
+    char *MEM_RES = "\x2f\x64\x65\x76\x2f\x6d\x65\x6d";
 
-    if (nva_init()) {
-            fprintf (stderr, "PCI init failure!. Are you r00t?\n");
-            return 1;
+    device = pci_detect_dev();
+    offset = device->bar0 + device->offset;
+
+    if (device == NULL) {
+      printf("No compatible devices device. \n");
+      exit(-1);
     }
 
-    while ((c = getopt (argc, argv, "c:")) != -1)
-    switch (c) {
-            case 'c':
-                    sscanf(optarg, "%d", &cnum);
-                    break;
-            default:
-                    break;
+    printf("Device: %s (%s / 0x%04x) \n", device->name, device->arch, device->dev_id);
+
+    while (1) {
+        if ((fd = open(MEM_RES, O_RDWR | O_SYNC)) == -1) {
+          printf("Can't read memory. Are you r00t?\n");
+          exit(-1);
+        }
+
+        base_offset = offset & ~(sysconf(_SC_PAGE_SIZE)-1);
+        map_base = mmap(0, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
+
+        if (!map_base) {
+          printf("Can't map memory. Are you r00t?\n");
+          exit(-1);
+        }
+
+        virt_addr = map_base + offset - base_offset;
+        read_result = *((uint32_t *) virt_addr);
+        temp = (read_result & 0x00000fff) / 0x20;
+        printf("\rGDDR6X VRAM Temp: %d°c", temp);
+        fflush(stdout);
+
+        if (munmap(map_base, map_size) == -1) {
+          printf("Can't unmap memory!\n");
+          exit(-1);
+        }
+
+        close(fd);
+        sleep(1);
     }
-
-    if (cnum >= nva_cardsnum) {
-        if (nva_cardsnum)
-            fprintf (stderr, "No valid card.\n");
-        else
-            fprintf (stderr, "No cards found.\n");
-        return 1;
-    }
-
-    if (mask & NVIDIA_MMIO_MASK_PMC) {
-            uint32_t pmc_boot_0 = nva_rd32(cnum, NV_PMC_BOOT_0);
-            struct pmc_id id;
-            PMC_ID(pmc_boot_0, &id);
-
-            switch (id.gpu_id) {
-              uint32_t offset;
-              case 0xb72: { // ga102
-                            // TODO: temps over 100 might fail
-                    offset = 0x0000E2A8;
-                    read_temps(cnum, offset);
-                    }
-                    break;
-
-              case 0xb74: { // ga104
-                    offset = 0x0000EE50;
-                    read_temps(cnum, offset);
-                    }
-                    break;
-
-              default:
-                    fprintf (stderr, "No valid card.\n");
-                    break;
-            }
-    }
-
     return 0;
 }
-

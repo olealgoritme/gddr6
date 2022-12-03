@@ -1,5 +1,6 @@
 all:
-	gcc gddr6.c include/nva/gpu.c include/nva/nva.c include/nva/chipset.c include/nva/regspace.c -o gddr6 -lpciaccess 
-
+	gcc -O3 -Wall -o gddr6 gddr6.c -lpci
 clean:
-	rm -rf gddr6
+	rm -f gddr6
+
+
