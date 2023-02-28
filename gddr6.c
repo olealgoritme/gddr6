@@ -8,6 +8,12 @@
 #include <sys/mman.h>
 #include <pci/pci.h>
 
+#define PRINT_ERROR                                                      \
+                do {                                                     \
+                fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
+                __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
+                } while(0)
+
 struct device 
 {
     uint32_t bar0;
@@ -77,10 +83,8 @@ int main(int argc, char **argv)
         base_offset = offset & ~(sysconf(_SC_PAGE_SIZE)-1);
         map_base = mmap(0, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
 
-        if (!map_base) {
-          printf("Can't map memory. Are you r00t?\n");
-          exit(-1);
-        }
+        if(map_base == (void *) -1) 
+          PRINT_ERROR;
 
         virt_addr = map_base + offset - base_offset;
         read_result = *((uint32_t *) virt_addr);
