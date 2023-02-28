@@ -1,5 +1,14 @@
 ## GDDR6(X) GPU Memory Temperature reader for linux
 
+## Needs:
+- Kernel boot parameter: iomem=relaxed
+```
+sudo vim /etc/default/grub
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash iomem=relaxed"
+sudo update-grub
+sudo reboot
+```
+
 ## Support
 - RTX 4090 (AD102)
 - RTX 3080 (GA102)
