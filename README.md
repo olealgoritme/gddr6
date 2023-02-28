@@ -1,6 +1,12 @@
 ## GDDR6(X) GPU Memory Temperature reader for linux
 
+
 ## Needs:
+- libpciaccess-dev and libpci-dev 
+```
+sudo apt install libpciaccess-dev libpci-dev -y
+```
+
 - Kernel boot parameter: iomem=relaxed
 ```
 sudo vim /etc/default/grub
