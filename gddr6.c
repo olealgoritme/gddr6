@@ -19,8 +19,9 @@ struct device
 
 static struct device devices[] = {
     { .bar0 = 0xEC000000, .offset = 0x0000E2A8, .dev_id = 0x2684, .arch = "AD102", .name =  "RTX 4090" },
-    { .bar0 = 0xFB000000, .offset = 0x0000E2A8, .dev_id = 0x1337, .arch = "GA102", .name =  "RTX 3090" },
-    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x1337, .arch = "GA104", .name =  "RTX 3070" },
+    { .bar0 = 0xFB000000, .offset = 0x0000E2A8, .dev_id = 0x2204, .arch = "GA102", .name =  "RTX 3090" },
+    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2484, .arch = "GA104", .name =  "RTX 3070" },
+    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2488, .arch = "GA104", .name =  "RTX 3070-LHR" },
 };
 
 struct device * pci_detect_dev() 
