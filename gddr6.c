@@ -56,18 +56,10 @@ void cleanup(int signal)
 {
     if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM) 
     {
-        printf("\nCleanup...\n");
         if (map_base != (void *) -1)
-        {
-           printf("Unmapping\n");
             munmap(map_base, MAP_SIZE);
-        }
         if (fd != -1)
-        {
-            printf("Closing fd..\n");
             close(fd);
-        }
-        printf("Exiting..\n");
         exit(0);
     }
 }
