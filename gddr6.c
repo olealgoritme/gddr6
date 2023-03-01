@@ -17,6 +17,7 @@
 // prototypes
 struct device * pci_detect_dev(void);
 
+// device struct
 struct device 
 {
     uint32_t bar0;
@@ -27,6 +28,7 @@ struct device
     const char *name;
 };
 
+// device table
 static struct device dev_table[] = 
 {
     { .bar0 = 0xEC000000, .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
@@ -35,6 +37,7 @@ static struct device dev_table[] =
     { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070-LHR" },
 };
 
+// pci device detection
 struct device * pci_detect_dev(void) 
 {
     struct pci_access *pacc = NULL;
