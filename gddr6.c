@@ -7,15 +7,21 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <pci/pci.h>
+#include <signal.h>
 
-#define PRINT_ERROR()                                                    \
-                do {                                                     \
-                fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
-                __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
-                } while(0)
 
-// prototypes
-struct device * pci_detect_dev(void);
+#define MAP_SIZE 0x1000
+#define PRINT_ERROR()                                        \
+    do {                                                     \
+    fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
+    __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
+    } while(0)
+
+
+// variables
+int fd;
+void *map_base;
+
 
 // device struct
 struct device 
@@ -28,8 +34,9 @@ struct device
     const char *name;
 };
 
+
 // device table
-static struct device dev_table[] = 
+static const struct device dev_table[] = 
 {
     { .bar0 = 0xEC000000, .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
     { .bar0 = 0xFB000000, .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
@@ -37,12 +44,60 @@ static struct device dev_table[] =
     { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070-LHR" },
 };
 
+
+// prototypes
+void cleanup(int signal);
+void cleanup_sig_handler(void);
+struct device *pci_detect_dev(void);
+
+
+// cleanup 
+void cleanup(int signal)
+{
+    if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM) 
+    {
+        printf("\nCleanup...\n");
+        if (map_base != (void *) -1)
+        {
+           printf("Unmapping\n");
+            munmap(map_base, MAP_SIZE);
+        }
+        if (fd != -1)
+        {
+            printf("Closing fd..\n");
+            close(fd);
+        }
+        printf("Exiting..\n");
+        exit(0);
+    }
+}
+
+
+// cleanup signal handler
+void cleanup_sig_handler(void)
+{
+    struct sigaction sa;
+    sa.sa_handler = &cleanup;
+    sa.sa_flags = 0;
+    sigfillset(&sa.sa_mask);
+
+    if (sigaction(SIGINT, &sa, NULL) < 0) 
+        perror("Cannot handle SIGINT");
+
+    if (sigaction(SIGHUP, &sa, NULL) < 0) 
+        perror("Cannot handle SIGHUP");
+
+    if (sigaction(SIGTERM, &sa, NULL) < 0) 
+        perror("Cannot handle SIGTERM");
+}
+
+
 // pci device detection
-struct device * pci_detect_dev(void) 
+struct device *pci_detect_dev(void)
 {
     struct pci_access *pacc = NULL;
     struct pci_dev *pci_dev = NULL;
-    struct device *device = NULL;
+    struct device *device = NULL; 
     ssize_t dev_table_size = (sizeof(dev_table)/sizeof(struct device));
 
     pacc = pci_alloc();
@@ -57,7 +112,7 @@ struct device * pci_detect_dev(void)
         {
             if (pci_dev->device_id == dev_table[i].dev_id) 
             {
-                device = &dev_table[i]; 
+                device = (struct device *) &dev_table[i]; 
 
                 if (pci_dev->base_addr[0] != device->bar0) 
                 {
@@ -68,23 +123,21 @@ struct device * pci_detect_dev(void)
             }
         }
     }
-    
+
     pci_cleanup(pacc);
     return device;
 }
+
 
 int main(int argc, char **argv)
 {
     (void) argc;
     (void) argv;
-    int fd;
-    void *map_base;
     void *virt_addr;
     double temp;
     uint32_t phys_addr;
     uint32_t read_result;
     uint32_t base_offset;
-    uint32_t map_size;
 
     struct device *device = NULL; 
     char *MEM = "\x2f\x64\x65\x76\x2f\x6d\x65\x6d";
@@ -105,14 +158,16 @@ int main(int argc, char **argv)
         PRINT_ERROR();
     }
 
-    map_size = 0x1000;
+    cleanup_sig_handler();
+
     phys_addr = (device->bar0 + device->offset);
     base_offset = phys_addr & ~(sysconf(_SC_PAGE_SIZE)-1);
-    map_base = mmap(0, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
+    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
 
     if(map_base == (void *) -1)
     {
-        close(fd);
+        if (fd != -1) 
+            close(fd);
         PRINT_ERROR();
     }
 
@@ -120,17 +175,12 @@ int main(int argc, char **argv)
     {
         virt_addr = (uint8_t *) map_base + (phys_addr - base_offset);
         read_result = *((uint32_t *) virt_addr);
-
         temp = ((read_result & 0x00000fff) / 0x20);
 
         printf("\r%s VRAM Temp: %.1f°c", device->vram, temp);
         fflush(stdout);
-
         sleep(1);
     }
 
-    munmap(map_base, map_size);
-    close(fd);
-        
     return 0;
 }
