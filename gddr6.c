@@ -69,6 +69,9 @@ struct device * pci_detect_dev()
 
 int main(int argc, char **argv)
 {
+    (void) argc;
+    (void) argv;
+
     int fd;
     void *map_base;
     void *virt_addr;
