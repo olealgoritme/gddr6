@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,7 +10,6 @@
 #include <sys/mman.h>
 #include <pci/pci.h>
 #include <signal.h>
-
 
 #define MAP_SIZE 0x1000
 #define PRINT_ERROR()                                        \
