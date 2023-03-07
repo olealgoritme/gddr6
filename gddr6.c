@@ -11,7 +11,7 @@
 #include <pci/pci.h>
 #include <signal.h>
 
-#define MAP_SIZE 0x1000
+#define PG_SZ sysconf(_SC_PAGE_SIZE)
 #define PRINT_ERROR()                                        \
     do {                                                     \
     fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
@@ -58,7 +58,7 @@ void cleanup(int signal)
     if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM) 
     {
         if (map_base != (void *) -1)
-            munmap(map_base, MAP_SIZE);
+            munmap(map_base, PG_SZ);
         if (fd != -1)
             close(fd);
         exit(0);
@@ -154,8 +154,8 @@ int main(int argc, char **argv)
     cleanup_sig_handler();
 
     phys_addr = (device->bar0 + device->offset);
-    base_offset = phys_addr & ~(sysconf(_SC_PAGE_SIZE)-1);
-    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
+    base_offset = phys_addr & ~(PG_SZ-1);
+    map_base = mmap(0, PG_SZ, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
 
     if(map_base == (void *) -1)
     {
