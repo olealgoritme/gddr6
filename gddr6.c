@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     (void) argc;
     (void) argv;
     void *virt_addr;
-    double temp;
+    uint32_t temp;
     uint32_t phys_addr;
     uint32_t read_result;
     uint32_t base_offset;
@@ -161,6 +161,7 @@ int main(int argc, char **argv)
     {
         if (fd != -1) 
             close(fd);
+        printf("Can't read memory. If you are root, enable kernel parameter iomem=relaxed\n");
         PRINT_ERROR();
     }
 
@@ -170,7 +171,7 @@ int main(int argc, char **argv)
         read_result = *((uint32_t *) virt_addr);
         temp = ((read_result & 0x00000fff) / 0x20);
 
-        printf("\r%s VRAM Temp: %.1f°c", device->vram, temp);
+        printf("\r%s VRAM Temp: %.1u°c", device->vram, temp);
         fflush(stdout);
         sleep(1);
     }
