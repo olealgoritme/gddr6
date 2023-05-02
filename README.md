@@ -17,9 +17,9 @@ sudo update-grub
 sudo reboot
 ```
 
-## Support
+## Tested
 - RTX 4090 (AD102)
-- RTX 3080 (GA102)
+- RTX 3090 (GA102)
 - RTX 3070 (GA104)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
