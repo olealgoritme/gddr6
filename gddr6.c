@@ -13,106 +13,100 @@
 
 #define PG_SZ sysconf(_SC_PAGE_SIZE)
 #define PRINT_ERROR()                                        \
-    do {                                                     \
-    fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
-    __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
-    } while(0)
+      do {                                                     \
+      fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
+      __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
+      } while(0)
 
 
-// variables
-int fd;
-void *map_base;
+  // variables
+  int fd;
+  void *map_base;
 
 
-// device struct
-struct device 
-{
-    uint32_t bar0;
-    uint32_t offset;
-    uint16_t dev_id;
-    const char *vram;
-    const char *arch;
-    const char *name;
-};
+  // device struct
+  struct device 
+  {
+      uint32_t bar0;
+      uint32_t offset;
+      uint16_t dev_id;
+      const char *vram;
+      const char *arch;
+      const char *name;
+  };
 
 
-// device table
-static const struct device dev_table[] = 
-{
-    { .bar0 = 0xEC000000, .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
-    { .bar0 = 0xFB000000, .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
-    { .bar0 = 0xFA000000, .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
-    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2484, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070" },
-    { .bar0 = 0xFB000000, .offset = 0x0000EE50, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070-LHR" },
-};
+  // device table
+  struct device dev_table[] = 
+  {
+      { .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
+      { .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
+      { .offset = 0x0000EE50, .dev_id = 0x2484, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070" },
+      { .offset = 0x0000EE50, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070-LHR" },
+  };
 
 
-// prototypes
-void cleanup(int signal);
-void cleanup_sig_handler(void);
-struct device *pci_detect_dev(void);
+  // prototypes
+  void cleanup(int signal);
+  void cleanup_sig_handler(void);
+  struct device *pci_detect_dev(void);
 
 
-// cleanup 
-void cleanup(int signal)
-{
-    if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM) 
-    {
-        if (map_base != (void *) -1)
-            munmap(map_base, PG_SZ);
-        if (fd != -1)
-            close(fd);
-        exit(0);
-    }
-}
+  // cleanup 
+  void cleanup(int signal)
+  {
+      if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM) 
+      {
+          if (map_base != (void *) -1)
+              munmap(map_base, PG_SZ);
+          if (fd != -1)
+              close(fd);
+          exit(0);
+      }
+  }
 
 
-// cleanup signal handler
-void cleanup_sig_handler(void)
-{
-    struct sigaction sa;
-    sa.sa_handler = &cleanup;
-    sa.sa_flags = 0;
-    sigfillset(&sa.sa_mask);
+  // cleanup signal handler
+  void cleanup_sig_handler(void)
+  {
+      struct sigaction sa;
+      sa.sa_handler = &cleanup;
+      sa.sa_flags = 0;
+      sigfillset(&sa.sa_mask);
 
-    if (sigaction(SIGINT, &sa, NULL) < 0) 
-        perror("Cannot handle SIGINT");
+      if (sigaction(SIGINT, &sa, NULL) < 0) 
+          perror("Cannot handle SIGINT");
 
-    if (sigaction(SIGHUP, &sa, NULL) < 0) 
-        perror("Cannot handle SIGHUP");
+      if (sigaction(SIGHUP, &sa, NULL) < 0) 
+          perror("Cannot handle SIGHUP");
 
-    if (sigaction(SIGTERM, &sa, NULL) < 0) 
-        perror("Cannot handle SIGTERM");
-}
+      if (sigaction(SIGTERM, &sa, NULL) < 0) 
+          perror("Cannot handle SIGTERM");
+  }
 
 
-// pci device detection
-struct device *pci_detect_dev(void)
-{
-    struct pci_access *pacc = NULL;
-    struct pci_dev *pci_dev = NULL;
-    struct device *device = NULL; 
-    ssize_t dev_table_size = (sizeof(dev_table)/sizeof(struct device));
+  // pci device detection
+  struct device *pci_detect_dev(void)
+  {
+      struct pci_access *pacc = NULL;
+      struct pci_dev *pci_dev = NULL;
+      struct device *device = NULL; 
+      ssize_t dev_table_size = (sizeof(dev_table)/sizeof(struct device));
 
-    pacc = pci_alloc();
-    pci_init(pacc);
-    pci_scan_bus(pacc);
+      pacc = pci_alloc();
+      pci_init(pacc);
+      pci_scan_bus(pacc);
 
-    for (pci_dev = pacc->devices; pci_dev; pci_dev = pci_dev->next) 
-    {
-        pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
+      for (pci_dev = pacc->devices; pci_dev; pci_dev = pci_dev->next) 
+      {
+          pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
 
-        for (uint32_t i = 0; i < dev_table_size; i++) 
-        {
-            if (pci_dev->device_id == dev_table[i].dev_id) 
-            {
-                device = (struct device *) &dev_table[i]; 
-
-                if (pci_dev->base_addr[0] != device->bar0) 
-                {
-                    device->bar0 = pci_dev->base_addr[0];
-                }
-
+          for (uint32_t i = 0; i < dev_table_size; i++) 
+          {
+              if (pci_dev->device_id == dev_table[i].dev_id) 
+              {
+                  device = (struct device *) &dev_table[i]; 
+                  device->bar0 = (pci_dev->base_addr[0] & 0xFFFFFFFF);
                 break;
             }
         }
