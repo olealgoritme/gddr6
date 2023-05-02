@@ -3,7 +3,7 @@
 Reads GDDR6 VRAM memory temperature from an NVIDIA GPU. 
 These findings are based on reverse engineering of the NVIDIA GPU Linux driver.
 
-## Needs:
+## Dependencies
 - libpciaccess-dev and libpci-dev 
 ```
 sudo apt install libpciaccess-dev libpci-dev -y
