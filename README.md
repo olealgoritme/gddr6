@@ -1,6 +1,6 @@
-## GDDR6(X) GPU Memory Temperature reader for linux
+## GDDR6/GDDR6X GPU Memory Temperature Reader for Linux
 
-Reads GDDR6 VRAM memory temperature from an NVIDIA GPU. 
+Reads GDDR6/GDDR6X VRAM memory temperatures from multiple supported NVIDIA GPUs found in a host Linux system.
 These findings are based on reverse engineering of the NVIDIA GPU Linux driver.
 
 ## Dependencies
@@ -17,8 +17,9 @@ sudo update-grub
 sudo reboot
 ```
 
-## Tested
+## Supported GPUs
 - RTX 4090 (AD102)
+- RTX 4070 Ti (AD104) 
 - RTX 3090 (GA102)
 - RTX 3070 (GA104)
 
