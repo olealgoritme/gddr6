@@ -4,9 +4,9 @@ Reads GDDR6/GDDR6X VRAM memory temperatures from multiple supported NVIDIA GPUs 
 These findings are based on reverse engineering of the NVIDIA GPU Linux driver.
 
 ## Dependencies
-- libpciaccess-dev and libpci-dev 
+- libpci-dev 
 ```
-sudo apt install libpciaccess-dev libpci-dev -y
+sudo apt install libpci-dev -y
 ```
 
 - Kernel boot parameter: iomem=relaxed
