@@ -22,5 +22,6 @@ sudo reboot
 - RTX 4070 Ti (AD104) 
 - RTX 3090 (GA102)
 - RTX 3070 (GA104)
+- RTX A2000 (GA106)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
