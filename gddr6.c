@@ -183,6 +183,9 @@ int main(int argc, char **argv)
             temp = ((read_result & 0x00000fff) / 0x20);
 
             printf(" %3u°c |", temp);
+
+            // unmap that offset, allows the same virtual address to be reused each iteration
+            munmap(map_base, PG_SZ);
         }
         fflush(stdout);
         sleep(1);
