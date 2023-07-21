@@ -19,6 +19,7 @@ sudo reboot
 
 ## Supported GPUs
 - RTX 4090 (AD102)
+- RTX 4080 (AD103)
 - RTX 4070 Ti (AD104)
 - RTX 4070 (AD104)
 - RTX 3090 (GA102)
