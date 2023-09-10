@@ -25,7 +25,9 @@ sudo reboot
 - RTX 3090 (GA102)
 - RTX 3080 Ti (GA102)
 - RTX 3080 (GA102)
+- RTX 3080 LHR (GA102)
 - RTX 3070 (GA104)
+- RTX 3070 LHR (GA104)
 - RTX A2000 (GA106)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
