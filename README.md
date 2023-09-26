@@ -17,6 +17,12 @@ sudo update-grub
 sudo reboot
 ```
 
+- Clone & Run
+```
+git clone https://github.com/olealgoritme/gddr6
+cd gddr6 && make && sudo ./gddr6
+```
+
 ## Supported GPUs
 - RTX A6000 (AD102)
 - RTX 4090 (AD102)
