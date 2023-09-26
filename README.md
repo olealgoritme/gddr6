@@ -17,7 +17,7 @@ sudo update-grub
 sudo reboot
 ```
 
-- Clone & Run
+## Clone & Run
 ```
 git clone https://github.com/olealgoritme/gddr6
 cd gddr6 && make && sudo ./gddr6
