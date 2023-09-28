@@ -36,5 +36,7 @@ cd gddr6 && make && sudo ./gddr6
 - RTX 3070 (GA104)
 - RTX 3070 LHR (GA104)
 - RTX A2000 (GA106)
+- RTX A4500 (GA102)
+- L4 (AD104)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
