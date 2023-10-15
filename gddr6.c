@@ -190,7 +190,7 @@ int main(int argc, char **argv)
             read_result = *((uint32_t *) virt_addr);
             temp = ((read_result & 0x00000fff) / 0x20);
 
-            printf(" %3u°c |", temp);
+            printf(" %3u°C |", temp);
         }
         fflush(stdout);
         sleep(1);
