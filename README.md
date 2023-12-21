@@ -38,5 +38,7 @@ cd gddr6 && make && sudo ./gddr6
 - RTX A2000 (GA106)
 - RTX A4500 (GA102)
 - L4 (AD104)
+- L40S (AD102)
+- A10 (GA102)
 
 ![](https://github.com/olealgoritme/gddr6/blob/master/gddr6_use.gif)
