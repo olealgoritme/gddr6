@@ -24,7 +24,6 @@ cd gddr6 && make && sudo ./gddr6
 ```
 
 ## Supported GPUs
-- RTX A6000 (AD102)
 - RTX 4090 (AD102)
 - RTX 4080 (AD103)
 - RTX 4070 Ti (AD104)
@@ -37,6 +36,8 @@ cd gddr6 && make && sudo ./gddr6
 - RTX 3070 LHR (GA104)
 - RTX A2000 (GA106)
 - RTX A4500 (GA102)
+- RTX A5000 (GA102)
+- RTX A6000 (AD102)
 - L4 (AD104)
 - L40S (AD102)
 - A10 (GA102)
