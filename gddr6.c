@@ -163,7 +163,7 @@ int main(int argc, char **argv)
             device->arch, device->dev_id, device->bus, device->dev, device->func);
     }
 
-    if ((fd = open(MEM, O_RDWR | O_SYNC)) == -1)
+    if ((fd = open(MEM, O_RDONLY)) == -1)
     {
         printf("Can't read memory. If you are root, enable kernel parameter iomem=relaxed\n");
         PRINT_ERROR();
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 
             phys_addr = (device->bar0 + device->offset);
             base_offset = phys_addr & ~(PG_SZ-1);
-            map_base = mmap(0, PG_SZ, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_offset);
+            map_base = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, fd, base_offset);
 
             if(map_base == (void *) -1)
             {
