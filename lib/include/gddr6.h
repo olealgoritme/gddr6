@@ -4,7 +4,8 @@
 
 #include <stdint.h>
 
-struct device {
+struct device
+{
     uint32_t bar0;
     uint8_t bus, dev, func;
     uint32_t offset;
@@ -12,11 +13,21 @@ struct device {
     const char *vram;
     const char *arch;
     const char *name;
+    void *mapped_addr;
+    void *phys_addr;
+    uint32_t base_offset;
 };
 
-void gddr6_initialize(void);
+struct gddr6_ctx {
+  struct device *devices;
+  int num_devices;
+  int fd;
+};
+
+void gddr6_init(void);
+void gddr6_memory_map(void);
 void gddr6_cleanup(int signal);
-void gddr6_monitor_temperatures(const struct device *devices, int num_devices);
-int gddr6_detect_compatible_gpus(struct device *devices, int max_devices);
+void gddr6_monitor_temperatures(void);
+int gddr6_detect_compatible_gpus(void);
 
 #endif // GDDR6_H

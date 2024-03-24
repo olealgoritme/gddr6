@@ -20,10 +20,9 @@
       __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
       } while(0)
 
-static int fd = -1;
-static void *map_base = MAP_FAILED;
-static struct device devices[32];
+#define MAX_DEVICES 32
 
+struct gddr6_ctx ctx = {0};
 struct device dev_table[] =
 {
     { .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
@@ -46,98 +45,119 @@ struct device dev_table[] =
     { .offset = 0x0000E2A8, .dev_id = 0x2236, .vram = "GDDR6",  .arch = "GA102", .name =  "A10" },
 };
 
-
-void gddr6_initialize(void) 
+void gddr6_init(void)
 {
-    const char *MEM = "/dev/mem";
-    if ((fd = open(MEM, O_RDONLY)) == -1) {
+    ctx.fd = open("/dev/mem", O_RDONLY);
+    if (ctx.fd == -1) {
         PRINT_ERROR();
     }
 }
 
-int gddr6_detect_compatible_gpus(struct device *devices, int max_devices) 
+int gddr6_detect_compatible_gpus(void)
 {
+    ctx.devices = NULL;
+    ctx.num_devices = 0;
+
     struct pci_access *pacc = NULL;
     struct pci_dev *pci_dev = NULL;
-    int num_devs = 0;
     ssize_t dev_table_size = (sizeof(dev_table)/sizeof(struct device));
 
     pacc = pci_alloc();
     pci_init(pacc);
     pci_scan_bus(pacc);
 
-    for (pci_dev = pacc->devices; pci_dev; pci_dev = pci_dev->next)
+    for (pci_dev = pacc->devices; pci_dev != NULL; pci_dev = pci_dev->next) 
     {
-        pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
+          pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
+          for (uint32_t i = 0; i < dev_table_size; ++i) 
+          {
+              if (pci_dev->device_id == dev_table[i].dev_id) 
+              {
+                  struct device *new_devices = realloc(ctx.devices, (ctx.num_devices + 1) * sizeof(struct device));
+                  if (new_devices == NULL)
+                  {
+                      fprintf(stderr, "Memory allocation failed\n");
+                      pci_cleanup(pacc);
+                      free(ctx.devices);
+                      ctx.devices = NULL;
+                      return 0;
+                  }
+                  ctx.devices = new_devices;
 
-        for (uint32_t i = 0; i < dev_table_size; i++)
-        {
-            if (pci_dev->device_id == dev_table[i].dev_id)
-            {
-                devices[num_devs] = dev_table[i];
-                devices[num_devs].bar0 = (pci_dev->base_addr[0] & 0xFFFFFFFF);
-                devices[num_devs].bus = pci_dev->bus;
-                devices[num_devs].dev = pci_dev->dev;
-                devices[num_devs].func = pci_dev->func;
-                num_devs++;
-            }
-        }
-    }
+                  ctx.devices[i] = dev_table[i];
+                  ctx.devices[i].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
+                  ctx.devices[i].bus = pci_dev->bus;
+                  ctx.devices[i].dev = pci_dev->dev;
+                  ctx.devices[i].func = pci_dev->func;
+                  ctx.num_devices++;
+              }
+          }
+      }
 
     pci_cleanup(pacc);
-    return num_devs;
+    return ctx.num_devices;
 }
 
-void gddr6_cleanup(int signal) 
+void gddr6_memory_map(void)
 {
-    if (map_base != MAP_FAILED) 
+    for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
-        munmap(map_base, PG_SZ);
-        map_base = MAP_FAILED;
-    }
+        ctx.devices[i].phys_addr = (void *) (ctx.devices[i].bar0 + ctx.devices[i].offset);
+        ctx.devices[i].base_offset = ctx.devices[i].phys_addr & ~(PG_SZ - 1);
 
-    if (fd != -1)
-    {
-        close(fd);
-        fd = -1;
-    }
-
-    exit(signal);
-}
-
-void gddr6_monitor_temperatures(const struct device *devices, int num_devices) 
-{
-    void *virt_addr;
-    uint32_t temp;
-    uint32_t phys_addr;
-    uint32_t read_result;
-    uint32_t base_offset;
-
-    while (1) 
-    {
-        printf("\rVRAM Temps: |");
-        for (int i = 0; i < num_devices; i++) 
+        ctx.devices[i].mapped_addr = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, ctx.fd, ctx.devices[i].base_offset);
+        if (ctx.devices[i].mapped_addr == MAP_FAILED)
         {
-            const struct device *device = &devices[i];
-            phys_addr = (device->bar0 + device->offset);
-            base_offset = phys_addr & ~(PG_SZ-1);
-            map_base = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, fd, base_offset);
-            if(map_base == (void *) MAP_FAILED)
+            ctx.devices[i].mapped_addr = NULL;
+            fprintf(stderr, "Memory mapping failed for pci=%x:%x:%x\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+        } else {
+            printf("Device: %s %s (%s / 0x%04x) pci=%x:%x:%x\n", ctx.devices[i].name, ctx.devices[i].vram,
+            ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+        }
+    }
+}
+
+void gddr6_monitor_temperatures(void)
+{
+   while (1) {
+        printf("\rVRAM Temps: |");
+        for (uint32_t i = 0; i < ctx.num_devices; i++)
+        {
+            if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED)
             {
-                if (fd != -1)
-                {
-                    close(fd);
-                }
-                printf("Can't read memory. If you are root, enable kernel parameter iomem=relaxed\n");
-                PRINT_ERROR();
+                continue;
             }
-            virt_addr = (uint8_t *) map_base + (phys_addr - base_offset);
-            read_result = *((uint32_t *) virt_addr);
-            temp = ((read_result & 0x00000fff) / 0x20);
+
+            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
+            uint32_t read_result = *((uint32_t *)virt_addr);
+            uint32_t temp = ((read_result & 0x00000fff) / 0x20);
 
             printf(" %3u°C |", temp);
         }
         fflush(stdout);
         sleep(1);
+   }
+}
+
+void gddr6_cleanup(int signal)
+{
+    for (uint32_t i = 0; i < ctx.num_devices; i++)
+    {
+        if (ctx.devices[i].mapped_addr != NULL && ctx.devices[i].mapped_addr != MAP_FAILED)
+        {
+            munmap(ctx.devices[i].mapped_addr, PG_SZ);
+            ctx.devices[i].mapped_addr = NULL;
+        }
     }
+    if (ctx.fd != -1)
+    {
+        close(ctx.fd);
+        ctx.fd = -1;
+    }
+    if (ctx.devices)
+    {
+        free(ctx.devices);
+        ctx.devices = NULL;
+    }
+    exit(signal);
 }
