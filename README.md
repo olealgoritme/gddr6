@@ -17,10 +17,12 @@ sudo update-grub
 sudo reboot
 ```
 
-## Clone & Run
+## Installation (cmake)
 ```
 git clone https://github.com/olealgoritme/gddr6
-cd gddr6 && make && sudo ./gddr6
+cd gddr6
+./build_install.sh
+sudo gddr6
 ```
 
 ## Supported GPUs
