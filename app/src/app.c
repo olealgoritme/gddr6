@@ -19,7 +19,6 @@ void register_signal_handlers(void)
 int main(int argc, char **argv)
 {
     register_signal_handlers();
-
     gddr6_init();
     int num_devs = gddr6_detect_compatible_gpus();
 
@@ -27,8 +26,6 @@ int main(int argc, char **argv)
     {
         printf("No compatible GPU found.\n");
         return 1;
-    } else {
-      printf("Found %d compatible GPU(s).\n", num_devs);
     }
 
     gddr6_memory_map();
