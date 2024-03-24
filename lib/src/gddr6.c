@@ -102,7 +102,7 @@ void gddr6_memory_map(void)
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
-        ctx.devices[i].phys_addr = (void *) (ctx.devices[i].bar0 + ctx.devices[i].offset);
+        ctx.devices[i].phys_addr = (ctx.devices[i].bar0 + ctx.devices[i].offset);
         ctx.devices[i].base_offset = ctx.devices[i].phys_addr & ~(PG_SZ - 1);
 
         ctx.devices[i].mapped_addr = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, ctx.fd, ctx.devices[i].base_offset);

@@ -14,7 +14,7 @@ struct device
     const char *arch;
     const char *name;
     void *mapped_addr;
-    void *phys_addr;
+    uint32_t phys_addr;
     uint32_t base_offset;
 };
 
