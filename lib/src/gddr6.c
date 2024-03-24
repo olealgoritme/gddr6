@@ -1,5 +1,7 @@
+// gddr6.c
 #define _GNU_SOURCE
 
+#include "gddr6.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -12,33 +14,16 @@
 #include <signal.h>
 
 #define PG_SZ sysconf(_SC_PAGE_SIZE)
-#define PRINT_ERROR()                                        \
+#define PRINT_ERROR()                                          \
       do {                                                     \
       fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
       __LINE__, __FILE__, errno, strerror(errno)); exit(1);    \
       } while(0)
 
+static int fd = -1;
+static void *map_base = MAP_FAILED;
+static struct device devices[32];
 
-// device struct
-struct device
-{
-    uint32_t bar0;
-    uint8_t bus, dev, func;
-    uint32_t offset;
-    uint16_t dev_id;
-    const char *vram;
-    const char *arch;
-    const char *name;
-};
-
-
-// variables
-int fd;
-void *map_base;
-struct device devices[32];
-
-
-// device table
 struct device dev_table[] =
 {
     { .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
@@ -62,47 +47,15 @@ struct device dev_table[] =
 };
 
 
-// prototypes
-void cleanup(int signal);
-void cleanup_sig_handler(void);
-int pci_detect_dev(void);
-
-
-// cleanup
-void cleanup(int signal)
+void gddr6_initialize(void) 
 {
-    if (signal == SIGHUP || signal == SIGINT || signal == SIGTERM)
-    {
-        if (map_base != (void *) -1)
-            munmap(map_base, PG_SZ);
-        if (fd != -1)
-            close(fd);
-        exit(0);
+    const char *MEM = "/dev/mem";
+    if ((fd = open(MEM, O_RDONLY)) == -1) {
+        PRINT_ERROR();
     }
 }
 
-
-// cleanup signal handler
-void cleanup_sig_handler(void)
-{
-    struct sigaction sa;
-    sa.sa_handler = &cleanup;
-    sa.sa_flags = 0;
-    sigfillset(&sa.sa_mask);
-
-    if (sigaction(SIGINT, &sa, NULL) < 0)
-        perror("Cannot handle SIGINT");
-
-    if (sigaction(SIGHUP, &sa, NULL) < 0)
-        perror("Cannot handle SIGHUP");
-
-    if (sigaction(SIGTERM, &sa, NULL) < 0)
-        perror("Cannot handle SIGTERM");
-}
-
-
-// pci device detection
-int pci_detect_dev(void)
+int gddr6_detect_compatible_gpus(struct device *devices, int max_devices) 
 {
     struct pci_access *pacc = NULL;
     struct pci_dev *pci_dev = NULL;
@@ -135,57 +88,46 @@ int pci_detect_dev(void)
     return num_devs;
 }
 
-
-int main(int argc, char **argv)
+void gddr6_cleanup(int signal) 
 {
-    (void) argc;
-    (void) argv;
+    if (map_base != MAP_FAILED) 
+    {
+        munmap(map_base, PG_SZ);
+        map_base = MAP_FAILED;
+    }
+
+    if (fd != -1)
+    {
+        close(fd);
+        fd = -1;
+    }
+
+    exit(signal);
+}
+
+void gddr6_monitor_temperatures(const struct device *devices, int num_devices) 
+{
     void *virt_addr;
     uint32_t temp;
     uint32_t phys_addr;
     uint32_t read_result;
     uint32_t base_offset;
 
-    int num_devs;
-    char *MEM = "\x2f\x64\x65\x76\x2f\x6d\x65\x6d";
-
-    num_devs = pci_detect_dev();
-
-    if (num_devs == 0)
-    {
-        printf("No compatible GPU found\n.");
-        exit(-1);
-    }
-
-    for (int i = 0; i < num_devs; i++) {
-        struct device *device = &devices[i];
-        printf("Device: %s %s (%s / 0x%04x) pci=%x:%x:%x\n", device->name, device->vram,
-            device->arch, device->dev_id, device->bus, device->dev, device->func);
-    }
-
-    if ((fd = open(MEM, O_RDONLY)) == -1)
-    {
-        printf("Can't read memory. If you are root, enable kernel parameter iomem=relaxed\n");
-        PRINT_ERROR();
-    }
-
-    cleanup_sig_handler();
-
-
-    while (1)
+    while (1) 
     {
         printf("\rVRAM Temps: |");
-        for (int i = 0; i < num_devs; i++) {
-            struct device *device = &devices[i];
-
+        for (int i = 0; i < num_devices; i++) 
+        {
+            const struct device *device = &devices[i];
             phys_addr = (device->bar0 + device->offset);
             base_offset = phys_addr & ~(PG_SZ-1);
             map_base = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, fd, base_offset);
-
-            if(map_base == (void *) -1)
+            if(map_base == (void *) MAP_FAILED)
             {
                 if (fd != -1)
+                {
                     close(fd);
+                }
                 printf("Can't read memory. If you are root, enable kernel parameter iomem=relaxed\n");
                 PRINT_ERROR();
             }
@@ -198,6 +140,4 @@ int main(int argc, char **argv)
         fflush(stdout);
         sleep(1);
     }
-
-    return 0;
 }
