@@ -110,6 +110,8 @@ void gddr6_memory_map(void)
         {
             ctx.devices[i].mapped_addr = NULL;
             fprintf(stderr, "Memory mapping failed for pci=%x:%x:%x\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+            fprintf(stderr, "Did you enable iomem=relaxed? Are you r00t?\n");
+            exit(EXIT_FAILURE);
         } else {
             printf("Device: %s %s (%s / 0x%04x) pci=%x:%x:%x\n", ctx.devices[i].name, ctx.devices[i].vram,
             ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
