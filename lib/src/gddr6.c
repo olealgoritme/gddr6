@@ -85,11 +85,11 @@ int gddr6_detect_compatible_gpus(void)
                   }
                   ctx.devices = new_devices;
 
-                  ctx.devices[i] = dev_table[i];
-                  ctx.devices[i].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
-                  ctx.devices[i].bus = pci_dev->bus;
-                  ctx.devices[i].dev = pci_dev->dev;
-                  ctx.devices[i].func = pci_dev->func;
+                  ctx.devices[ctx.num_devices] = dev_table[i];
+                  ctx.devices[ctx.num_devices].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
+                  ctx.devices[ctx.num_devices].bus = pci_dev->bus;
+                  ctx.devices[ctx.num_devices].dev = pci_dev->dev;
+                  ctx.devices[ctx.num_devices].func = pci_dev->func;
                   ctx.num_devices++;
               }
           }
