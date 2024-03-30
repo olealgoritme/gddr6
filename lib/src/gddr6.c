@@ -29,6 +29,7 @@ struct device dev_table[] =
     { .offset = 0x0000E2A8, .dev_id = 0x2704, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080" },
     { .offset = 0x0000E2A8, .dev_id = 0x2782, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070 Ti" },
     { .offset = 0x0000E2A8, .dev_id = 0x2786, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070" },
+    { .offset = 0x0000E2A8, .dev_id = 0x2860, .vram = "GDDR6",  .arch = "AD106", .name =  "RTX 4070 Max-Q / Mobile" },
     { .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
     { .offset = 0x0000E2A8, .dev_id = 0x2208, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080 Ti" },
     { .offset = 0x0000E2A8, .dev_id = 0x2206, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080" },
@@ -84,11 +85,11 @@ int gddr6_detect_compatible_gpus(void)
                   }
                   ctx.devices = new_devices;
 
-                  ctx.devices[i] = dev_table[i];
-                  ctx.devices[i].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
-                  ctx.devices[i].bus = pci_dev->bus;
-                  ctx.devices[i].dev = pci_dev->dev;
-                  ctx.devices[i].func = pci_dev->func;
+                  ctx.devices[ctx.num_devices] = dev_table[i];
+                  ctx.devices[ctx.num_devices].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
+                  ctx.devices[ctx.num_devices].bus = pci_dev->bus;
+                  ctx.devices[ctx.num_devices].dev = pci_dev->dev;
+                  ctx.devices[ctx.num_devices].func = pci_dev->func;
                   ctx.num_devices++;
               }
           }
