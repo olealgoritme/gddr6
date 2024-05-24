@@ -3,11 +3,8 @@
 Reads GDDR6/GDDR6X VRAM memory temperatures from multiple supported NVIDIA GPUs found in a host Linux system.
 These findings are based on reverse engineering of the NVIDIA GPU Linux driver.
 
-## Dependencies
-- libpci-dev 
-```
-sudo apt install libpci-dev -y
-```
+
+## Prerequisites
 
 - Kernel boot parameter: iomem=relaxed
 ```
@@ -15,6 +12,26 @@ sudo vim /etc/default/grub
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash iomem=relaxed"
 sudo update-grub
 sudo reboot
+```
+
+- Disabling Secure Boot
+  
+This can be done in the UEFI/BIOS configuration or using [mokutil](https://wiki.debian.org/SecureBoot#Disabling.2Fre-enabling_Secure_Boot):
+
+```
+mokutil --disable-validation
+```
+
+Check state with:
+```
+$ sudo mokutil --sb
+SecureBoot disabled
+```
+
+## Dependencies
+- libpci-dev 
+```
+sudo apt install libpci-dev -y
 ```
 
 ## Installation (cmake)
