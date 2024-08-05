@@ -7,6 +7,9 @@ These findings are based on reverse engineering of the NVIDIA GPU Linux driver.
 ## Prerequisites
 
 - Kernel boot parameter: iomem=relaxed
+
+This step is optional. On some versions, the default kernel boot parameter is sufficient to run this program.
+
 ```
 sudo vim /etc/default/grub
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash iomem=relaxed"
