@@ -29,7 +29,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    gddr6_memory_map(0);
+    gddr6_memory_map();
 
     if (argc >= 2 && !strcmp(argv[1], "-j"))
     {
