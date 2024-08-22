@@ -109,7 +109,7 @@ int gddr6_detect_compatible_gpus(void)
     return ctx.num_devices;
 }
 
-void gddr6_memory_map(int verbose)
+void gddr6_memory_map()
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
@@ -124,12 +124,19 @@ void gddr6_memory_map(int verbose)
             fprintf(stderr, "Did you enable iomem=relaxed? Are you r00t?\n");
             exit(EXIT_FAILURE);
         }
+    }
+}
 
-        if (verbose)
-        {
-            printf("Device: %s %s (%s / 0x%04x) pci=%02X:%02X.%X\n", ctx.devices[i].name, ctx.devices[i].vram,
-            ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+void gddr6_print_memory_map()
+{
+    for (uint32_t i = 0; i < ctx.num_devices; i++)
+    {
+        if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED) {
+            continue;
         }
+
+        printf("Device: %s %s (%s / 0x%04x) pci=%02X:%02X.%X\n", ctx.devices[i].name, ctx.devices[i].vram,
+            ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
     }
 }
 

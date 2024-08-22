@@ -29,14 +29,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    gddr6_memory_map(0);
+
     if (argc >= 2 && !strcmp(argv[1], "-j"))
     {
-        gddr6_memory_map(0);
         gddr6_print_temperatures_json();
     }
     else
     {
-        gddr6_memory_map(1);            
+        gddr6_print_memory_map();
         gddr6_monitor_temperatures();
     }
 
