@@ -26,8 +26,8 @@ struct gddr6_ctx {
 };
 
 void gddr6_init(void);
-void gddr6_memory_map();
-void gddr6_print_memory_map();
+void gddr6_memory_map(void);
+void gddr6_print_memory_map(void);
 void gddr6_cleanup(int signal);
 void gddr6_get_temperatures(void);
 void gddr6_monitor_temperatures(void);

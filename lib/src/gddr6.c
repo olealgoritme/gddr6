@@ -109,7 +109,7 @@ int gddr6_detect_compatible_gpus(void)
     return ctx.num_devices;
 }
 
-void gddr6_memory_map()
+void gddr6_memory_map(void)
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
@@ -127,7 +127,7 @@ void gddr6_memory_map()
     }
 }
 
-void gddr6_print_memory_map()
+void gddr6_print_memory_map(void)
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
@@ -160,6 +160,8 @@ void gddr6_get_temperatures(void)
 
 void gddr6_monitor_temperatures(void)
 {
+    gddr6_print_memory_map();
+
     while (1)
     {
         gddr6_get_temperatures();

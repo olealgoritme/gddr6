@@ -37,7 +37,6 @@ int main(int argc, char **argv)
     }
     else
     {
-        gddr6_print_memory_map();
         gddr6_monitor_temperatures();
     }
 
