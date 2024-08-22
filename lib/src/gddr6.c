@@ -53,7 +53,8 @@ struct device dev_table[] =
 void gddr6_init(void)
 {
     ctx.fd = open("/dev/mem", O_RDONLY);
-    if (ctx.fd == -1) {
+    if (ctx.fd == -1)
+    {
         PRINT_ERROR();
     }
 }
@@ -73,37 +74,42 @@ int gddr6_detect_compatible_gpus(void)
 
     for (pci_dev = pacc->devices; pci_dev != NULL; pci_dev = pci_dev->next) 
     {
-          pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
-          for (uint32_t i = 0; i < dev_table_size; ++i) 
-          {
-              if (pci_dev->device_id == dev_table[i].dev_id) 
-              {
-                  struct device *new_devices = realloc(ctx.devices, (ctx.num_devices + 1) * sizeof(struct device));
-                  if (new_devices == NULL)
-                  {
-                      fprintf(stderr, "Memory allocation failed\n");
-                      pci_cleanup(pacc);
-                      free(ctx.devices);
-                      ctx.devices = NULL;
-                      return 0;
-                  }
-                  ctx.devices = new_devices;
+        pci_fill_info(pci_dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_CLASS);
+        for (uint32_t i = 0; i < dev_table_size; ++i) 
+        {
+            if (pci_dev->device_id == dev_table[i].dev_id) 
+            {
+                struct device *new_devices = realloc(ctx.devices, (ctx.num_devices + 1) * sizeof(struct device));
+                if (new_devices == NULL)
+                {
+                    fprintf(stderr, "Memory allocation failed\n");
+                    exit(EXIT_FAILURE);
+                }
+                ctx.devices = new_devices;
 
-                  ctx.devices[ctx.num_devices] = dev_table[i];
-                  ctx.devices[ctx.num_devices].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
-                  ctx.devices[ctx.num_devices].bus = pci_dev->bus;
-                  ctx.devices[ctx.num_devices].dev = pci_dev->dev;
-                  ctx.devices[ctx.num_devices].func = pci_dev->func;
-                  ctx.num_devices++;
-              }
-          }
-      }
+                ctx.devices[ctx.num_devices] = dev_table[i];
+                ctx.devices[ctx.num_devices].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
+                ctx.devices[ctx.num_devices].bus = pci_dev->bus;
+                ctx.devices[ctx.num_devices].dev = pci_dev->dev;
+                ctx.devices[ctx.num_devices].func = pci_dev->func;
+                ctx.num_devices++;
+            }
+        }
+    }
 
     pci_cleanup(pacc);
+
+    ctx.temperatures = malloc(ctx.num_devices * sizeof(uint32_t));
+    if (ctx.temperatures == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
     return ctx.num_devices;
 }
 
-void gddr6_memory_map(void)
+void gddr6_memory_map(int verbose)
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
@@ -117,33 +123,70 @@ void gddr6_memory_map(void)
             fprintf(stderr, "Memory mapping failed for pci=%x:%x:%x\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
             fprintf(stderr, "Did you enable iomem=relaxed? Are you r00t?\n");
             exit(EXIT_FAILURE);
-        } else {
-            printf("Device: %s %s (%s / 0x%04x) pci=%x:%x:%x\n", ctx.devices[i].name, ctx.devices[i].vram,
+        }
+
+        if (verbose)
+        {
+            printf("Device: %s %s (%s / 0x%04x) pci=%02x:%02x:%02x\n", ctx.devices[i].name, ctx.devices[i].vram,
             ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+        }
+    }
+}
+
+void gddr6_get_temperatures(void)
+{
+    for (uint32_t i = 0; i < ctx.num_devices; i++)
+    {
+        if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED)
+        {
+            ctx.temperatures[i] = 0;;
+        }
+        else
+        {
+            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
+            uint32_t read_result = *((uint32_t *)virt_addr);
+            uint32_t temp = ((read_result & 0x00000fff) / 0x20);
+            ctx.temperatures[i] = temp;
         }
     }
 }
 
 void gddr6_monitor_temperatures(void)
 {
-   while (1) {
+    while (1)
+    {
+        gddr6_get_temperatures();
         printf("\rVRAM Temps: |");
         for (uint32_t i = 0; i < ctx.num_devices; i++)
         {
-            if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED)
-            {
-                continue;
-            }
-
-            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
-            uint32_t read_result = *((uint32_t *)virt_addr);
-            uint32_t temp = ((read_result & 0x00000fff) / 0x20);
-
-            printf(" %3u°C |", temp);
+            printf(" %3u°C |", ctx.temperatures[i]);
         }
         fflush(stdout);
         sleep(1);
-   }
+    }
+}
+
+void gddr6_print_temperatures_json(void)
+{
+    if (ctx.num_devices == 0)
+    {
+        printf("[]\n");
+        return;
+    }
+
+    gddr6_get_temperatures();
+
+    printf("[\n");
+    for (uint32_t i = 0; i < ctx.num_devices; i++)
+    {
+        char *delimiter = i < ctx.num_devices - 1 ? "," : "";
+        printf(
+            "  {\"name\: \"%s\", \"vram\": \"%s\", \"arch\": \"%s\", \"dev_id\": \"0x%04x\", \"pci_id\": \"%02x:%02x:%02x\", \"temp\": %d}%s\n",
+            ctx.devices[i].name, ctx.devices[i].vram, ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev,
+            ctx.devices[i].func, ctx.temperatures[i]
+        );
+    }
+    printf("]\n");
 }
 
 void gddr6_cleanup(int signal)

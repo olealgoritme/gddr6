@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 
 void register_signal_handlers(void)
 {
@@ -24,12 +25,20 @@ int main(int argc, char **argv)
 
     if (num_devs == 0)
     {
-        printf("No compatible GPU found.\n");
+        fprintf(stderr, "No compatible GPU found.\n");
         return 1;
     }
 
-    gddr6_memory_map();
-    gddr6_monitor_temperatures();
+    if (argc >= 2 && !strcmp(argv[1], "-j"))
+    {
+        gddr6_memory_map(0);
+        gddr6_print_temperatures_json();
+    }
+    else
+    {
+        gddr6_memory_map(1);            
+        gddr6_monitor_temperatures();
+    }
 
     return 0;
 }
