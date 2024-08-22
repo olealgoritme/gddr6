@@ -42,6 +42,12 @@ cd gddr6
 sudo gddr6
 ```
 
+## Running
+```
+sudo gddr6       # for human-readable monitoring
+sudo gddr6 -j    # for one-time JSON output
+```
+
 ## Supported GPUs
 - RTX 4090 (AD102)
 - RTX 4080 Super (AD103)
