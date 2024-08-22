@@ -181,9 +181,9 @@ void gddr6_print_temperatures_json(void)
     {
         char *delimiter = i < ctx.num_devices - 1 ? "," : "";
         printf(
-            "  {\"name\: \"%s\", \"vram\": \"%s\", \"arch\": \"%s\", \"dev_id\": \"0x%04x\", \"pci_id\": \"%02x:%02x:%02x\", \"temp\": %d}%s\n",
+            "  {\"name\": \"%s\", \"vram\": \"%s\", \"arch\": \"%s\", \"dev_id\": \"0x%04x\", \"pci_id\": \"%02x:%02x:%02x\", \"temp\": %d}%s\n",
             ctx.devices[i].name, ctx.devices[i].vram, ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev,
-            ctx.devices[i].func, ctx.temperatures[i]
+            ctx.devices[i].func, ctx.temperatures[i], delimiter
         );
     }
     printf("]\n");
