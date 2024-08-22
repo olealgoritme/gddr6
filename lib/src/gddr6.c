@@ -139,7 +139,7 @@ void gddr6_get_temperatures(void)
     {
         if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED)
         {
-            ctx.temperatures[i] = 0;;
+            ctx.temperatures[i] = 0;
         }
         else
         {
