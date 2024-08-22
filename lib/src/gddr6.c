@@ -120,14 +120,14 @@ void gddr6_memory_map(int verbose)
         if (ctx.devices[i].mapped_addr == MAP_FAILED)
         {
             ctx.devices[i].mapped_addr = NULL;
-            fprintf(stderr, "Memory mapping failed for pci=%x:%x:%x\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+            fprintf(stderr, "Memory mapping failed for pci=%02X:%02X.%X\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
             fprintf(stderr, "Did you enable iomem=relaxed? Are you r00t?\n");
             exit(EXIT_FAILURE);
         }
 
         if (verbose)
         {
-            printf("Device: %s %s (%s / 0x%04x) pci=%02x:%02x:%02x\n", ctx.devices[i].name, ctx.devices[i].vram,
+            printf("Device: %s %s (%s / 0x%04x) pci=%02X:%02X.%X\n", ctx.devices[i].name, ctx.devices[i].vram,
             ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
         }
     }
@@ -181,7 +181,7 @@ void gddr6_print_temperatures_json(void)
     {
         char *delimiter = i < ctx.num_devices - 1 ? "," : "";
         printf(
-            "  {\"name\": \"%s\", \"vram\": \"%s\", \"arch\": \"%s\", \"dev_id\": \"0x%04x\", \"pci_id\": \"%02x:%02x:%02x\", \"temp\": %d}%s\n",
+            "  {\"name\": \"%s\", \"vram\": \"%s\", \"arch\": \"%s\", \"dev_id\": \"0x%04x\", \"pci_id\": \"%02X:%02X:%X\", \"temp\": %d}%s\n",
             ctx.devices[i].name, ctx.devices[i].vram, ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev,
             ctx.devices[i].func, ctx.temperatures[i], delimiter
         );
