@@ -22,12 +22,16 @@ struct gddr6_ctx {
   struct device *devices;
   int num_devices;
   int fd;
+  uint32_t *temperatures;
 };
 
 void gddr6_init(void);
 void gddr6_memory_map(void);
+void gddr6_print_memory_map(void);
 void gddr6_cleanup(int signal);
+void gddr6_get_temperatures(void);
 void gddr6_monitor_temperatures(void);
+void gddr6_print_temperatures_json(void);
 int gddr6_detect_compatible_gpus(void);
 
 #endif // GDDR6_H
