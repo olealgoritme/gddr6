@@ -25,29 +25,29 @@
 struct gddr6_ctx ctx = {0};
 struct device dev_table[] =
 {
-    { .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2702, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080 Super" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2704, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2705, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4070 Ti Super" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2782, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070 Ti" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2783, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070 Super" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2786, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2860, .vram = "GDDR6",  .arch = "AD106", .name =  "RTX 4070 Max-Q / Mobile" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2203, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090 Ti" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2208, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080 Ti" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2206, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2216, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080 LHR" },
-    { .offset = 0x0000EE50, .dev_id = 0x2484, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070" },
-    { .offset = 0x0000EE50, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070 LHR" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2531, .vram = "GDDR6",  .arch = "GA106", .name =  "RTX A2000" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2571, .vram = "GDDR6",  .arch = "GA106", .name =  "RTX A2000" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2232, .vram = "GDDR6",  .arch = "GA102", .name =  "RTX A4500" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2231, .vram = "GDDR6",  .arch = "GA102", .name =  "RTX A5000" },
-    { .offset = 0x0000E2A8, .dev_id = 0x26B1, .vram = "GDDR6",  .arch = "AD102", .name =  "RTX A6000" },
-    { .offset = 0x0000E2A8, .dev_id = 0x27b8, .vram = "GDDR6",  .arch = "AD104", .name =  "L4" },
-    { .offset = 0x0000E2A8, .dev_id = 0x26b9, .vram = "GDDR6",  .arch = "AD102", .name =  "L40S" },
-    { .offset = 0x0000E2A8, .dev_id = 0x2236, .vram = "GDDR6",  .arch = "GA102", .name =  "A10" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2702, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080 Super" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2704, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2705, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4070 Ti Super" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2782, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070 Ti" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2783, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070 Super" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2786, .vram = "GDDR6X", .arch = "AD104", .name =  "RTX 4070" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2860, .vram = "GDDR6",  .arch = "AD106", .name =  "RTX 4070 Max-Q / Mobile" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2203, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090 Ti" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2204, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3090" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2208, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080 Ti" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2206, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2216, .vram = "GDDR6X", .arch = "GA102", .name =  "RTX 3080 LHR" },
+    { .offset = 0x0000EE50, .hotspot_offset = 0x0002046C, .dev_id = 0x2484, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070" },
+    { .offset = 0x0000EE50, .hotspot_offset = 0x0002046C, .dev_id = 0x2488, .vram = "GDDR6",  .arch = "GA104", .name =  "RTX 3070 LHR" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2531, .vram = "GDDR6",  .arch = "GA106", .name =  "RTX A2000" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2571, .vram = "GDDR6",  .arch = "GA106", .name =  "RTX A2000" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2232, .vram = "GDDR6",  .arch = "GA102", .name =  "RTX A4500" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2231, .vram = "GDDR6",  .arch = "GA102", .name =  "RTX A5000" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x26B1, .vram = "GDDR6",  .arch = "AD102", .name =  "RTX A6000" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x27b8, .vram = "GDDR6",  .arch = "AD104", .name =  "L4" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x26b9, .vram = "GDDR6",  .arch = "AD102", .name =  "L40S" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2236, .vram = "GDDR6",  .arch = "GA102", .name =  "A10" },
 };
 
 void gddr6_init(void)
@@ -107,6 +107,7 @@ void gddr6_memory_map(void)
 {
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
+        // Map VRAM temperature sensor
         ctx.devices[i].phys_addr = (ctx.devices[i].bar0 + ctx.devices[i].offset);
         ctx.devices[i].base_offset = ctx.devices[i].phys_addr & ~(PG_SZ - 1);
 
@@ -121,13 +122,25 @@ void gddr6_memory_map(void)
             printf("Device: %s %s (%s / 0x%04x) pci=%x:%x:%x\n", ctx.devices[i].name, ctx.devices[i].vram,
             ctx.devices[i].arch, ctx.devices[i].dev_id, ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
         }
+
+        ctx.devices[i].hotspot_phys_addr = (ctx.devices[i].bar0 + ctx.devices[i].hotspot_offset);
+        ctx.devices[i].hotspot_base_offset = ctx.devices[i].hotspot_phys_addr & ~(PG_SZ - 1);
+
+        ctx.devices[i].hotspot_mapped_addr = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, ctx.fd, ctx.devices[i].hotspot_base_offset);
+        if (ctx.devices[i].hotspot_mapped_addr == MAP_FAILED)
+        {
+            ctx.devices[i].hotspot_mapped_addr = NULL;
+            fprintf(stderr, "Hotspot memory mapping failed for pci=%x:%x:%x\n", ctx.devices[i].bus, ctx.devices[i].dev, ctx.devices[i].func);
+        }
     }
 }
 
 void gddr6_monitor_temperatures(void)
 {
    while (1) {
-        printf("\rVRAM Temps: |");
+        printf("\r");
+
+        printf("VRAM Temp: |");
         for (uint32_t i = 0; i < ctx.num_devices; i++)
         {
             if (ctx.devices[i].mapped_addr == NULL || ctx.devices[i].mapped_addr == MAP_FAILED)
@@ -135,12 +148,30 @@ void gddr6_monitor_temperatures(void)
                 continue;
             }
 
-            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
+            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr - ctx.devices[i].base_offset);
             uint32_t read_result = *((uint32_t *)virt_addr);
             uint32_t temp = ((read_result & 0x00000fff) / 0x20);
 
             printf(" %3u°C |", temp);
         }
+
+        printf(" GPU Hotspot: |");
+        for (uint32_t i = 0; i < ctx.num_devices; i++)
+        {
+            if (ctx.devices[i].hotspot_mapped_addr == NULL || ctx.devices[i].hotspot_mapped_addr == MAP_FAILED)
+            {
+                printf(" N/A |");
+                continue;
+            }
+
+            void *hotspot_virt_addr = (uint8_t *) ctx.devices[i].hotspot_mapped_addr + 
+                                     (ctx.devices[i].hotspot_phys_addr - ctx.devices[i].hotspot_base_offset);
+            uint32_t hotspot_read_result = *((uint32_t *)hotspot_virt_addr);
+            uint32_t hotspot_temp = (hotspot_read_result >> 8) & 0xff;
+
+            printf(" %3u°C |", hotspot_temp);
+        }
+
         fflush(stdout);
         sleep(1);
    }
@@ -155,12 +186,20 @@ void gddr6_cleanup(int signal)
             munmap(ctx.devices[i].mapped_addr, PG_SZ);
             ctx.devices[i].mapped_addr = NULL;
         }
+
+        if (ctx.devices[i].hotspot_mapped_addr != NULL && ctx.devices[i].hotspot_mapped_addr != MAP_FAILED)
+        {
+            munmap(ctx.devices[i].hotspot_mapped_addr, PG_SZ);
+            ctx.devices[i].hotspot_mapped_addr = NULL;
+        }
     }
+
     if (ctx.fd != -1)
     {
         close(ctx.fd);
         ctx.fd = -1;
     }
+
     if (ctx.devices)
     {
         free(ctx.devices);

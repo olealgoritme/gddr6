@@ -9,13 +9,17 @@ struct device
     uint32_t bar0;
     uint8_t bus, dev, func;
     uint32_t offset;
+    uint32_t hotspot_offset;
     uint16_t dev_id;
     const char *vram;
     const char *arch;
     const char *name;
     void *mapped_addr;
+    void *hotspot_mapped_addr;
     uint32_t phys_addr;
+    uint32_t hotspot_phys_addr;
     uint32_t base_offset;
+    uint32_t hotspot_base_offset;
 };
 
 struct gddr6_ctx {
