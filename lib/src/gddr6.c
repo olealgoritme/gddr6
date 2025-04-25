@@ -26,6 +26,7 @@ struct gddr6_ctx ctx = {0};
 struct device dev_table[] =
 {
     { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
+    { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2685, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090 D" },
     { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2702, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080 Super" },
     { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2704, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4080" },
     { .offset = 0x0000E2A8, .hotspot_offset = 0x0002046C, .dev_id = 0x2705, .vram = "GDDR6X", .arch = "AD103", .name =  "RTX 4070 Ti Super" },
