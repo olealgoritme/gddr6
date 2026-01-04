@@ -138,9 +138,9 @@ void gddr6_monitor_temperatures(void)
 
             void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
             uint32_t read_result = *((uint32_t *)virt_addr);
-            uint32_t temp = ((read_result & 0x00000fff) / 0x20);
+            int8_t temp = (read_result & 0x00001fff) >> 5;
 
-            printf(" %3u°C |", temp);
+            printf(" %3d°C |", (int32_t)temp);
         }
         fflush(stdout);
         sleep(1);
