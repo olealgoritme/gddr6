@@ -16,6 +16,9 @@ sudo gddr6 --per-module   # each of the 8 GDDR7 modules separately
 This is reverse-engineered and unofficial (NVIDIA does not expose memory temperature via nvidia-smi/NVML
 on this card) — treat the readings as approximate.
 
+For a dedicated Blackwell app with a TUI (plus ASCII/JSON output) and a reusable C library, see
+[**gpuwatch**](https://github.com/olealgoritme/gpuwatch).
+
 
 ## Prerequisites
 
