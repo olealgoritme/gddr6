@@ -11,7 +11,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <pci/pci.h>
-#include <signal.h>
 
 #define PG_SZ sysconf(_SC_PAGE_SIZE)
 #define PRINT_ERROR()                                          \
@@ -23,6 +22,7 @@
 #define MAX_DEVICES 32
 
 struct gddr6_ctx ctx = {0};
+// Ada/Ampere GPUs: temperature field is bits [11:0], Celsius = field / 32.
 struct device dev_table[] =
 {
     { .offset = 0x0000E2A8, .dev_id = 0x2684, .vram = "GDDR6X", .arch = "AD102", .name =  "RTX 4090" },
@@ -49,6 +49,14 @@ struct device dev_table[] =
     { .offset = 0x0000E2A8, .dev_id = 0x27b8, .vram = "GDDR6",  .arch = "AD104", .name =  "L4" },
     { .offset = 0x0000E2A8, .dev_id = 0x26b9, .vram = "GDDR6",  .arch = "AD102", .name =  "L40S" },
     { .offset = 0x0000E2A8, .dev_id = 0x2236, .vram = "GDDR6",  .arch = "GA102", .name =  "A10" },
+    // Blackwell GDDR7 memory temperature: the raw FBPA DRAM sensor at
+    // NV_PFB_FBPA_DQR_STATUS_DQ_IC0_SUBP0 (0x9A24C0) - the register the FBFALCON
+    // firmware reads. NOT PLM-locked; reads valid data from userspace (validity
+    // bit 24 of 0x9A24D0). The value is a per-device GDDR temp MR-code in bits
+    // 23:16; DECODE_GDDR_MRCODE converts it to Celsius. (The documented mem-temp
+    // reg 0x9A44B0 is PLM-locked and its 0xE2A8 scratch mirror is unpopulated on
+    // this card, so we read the raw sensor directly.)
+    { .offset = 0x009A24C0, .decode = DECODE_GDDR_MRCODE, .dev_id = 0x2b85, .vram = "GDDR7", .arch = "GB202", .name = "RTX 5090" },
 };
 
 void gddr6_init(void)
@@ -125,8 +133,77 @@ void gddr6_memory_map(void)
     }
 }
 
-void gddr6_monitor_temperatures(void)
+// Convert a raw register value to degrees Celsius per the device's decode.
+static int decode_temp(enum temp_decode decode, uint32_t raw)
 {
+    switch (decode)
+    {
+    case DECODE_GDDR_MRCODE:
+    {
+        // GDDR temp MR-code in bits 23:16 (see NV_PFB_FBPA_DQR_STATUS_DQ).
+        // code 20 = 0 C, +2 C per unit above 20; below 20 is negative.
+        int code = (raw >> 16) & 0xFF;
+        if (code > 80) code = 80;
+        return (code > 19) ? (code - 20) * 2 : -(40 - code * 2);
+    }
+    case DECODE_ADA:
+    default:
+        return (raw & 0x00000fff) / 0x20;
+    }
+}
+
+// Blackwell GDDR7 per-memory-partition (module) DQR sensors. Module p lives at
+// BAR0 + DQR_MODULE0 + p*DQR_STRIDE; validity nibble (all 4 IC/subp valid = 0xF)
+// is at +DQR_VLD_OFF. Unlike the single pre-mapped register, these span several
+// pages, so they are read on demand with a fresh page-aligned mmap.
+#define DQR_MODULE0   0x009024C0u
+#define DQR_VLD_OFF   (0x009024D0u - 0x009024C0u)   // +0x10
+#define DQR_STRIDE    0x00004000u
+#define DQR_MAX_MODULES 16
+
+// Read one 32-bit MMIO register at BAR0+off via a fresh read-only page mmap.
+// Returns 0 on success. Used only for the on-demand per-module GDDR7 reads.
+static int read_bar0_reg(uint32_t bar0, uint32_t off, uint32_t *out)
+{
+    long pg = PG_SZ;
+    uint64_t phys = (uint64_t)bar0 + off;
+    uint64_t base = phys & ~((uint64_t)pg - 1);
+    volatile void *map = mmap(0, pg, PROT_READ, MAP_SHARED, ctx.fd, base);
+    if (map == MAP_FAILED) return -1;
+    *out = *(volatile uint32_t *)((const uint8_t *)map + (phys - base));
+    munmap((void *)map, pg);
+    return 0;
+}
+
+// Read the GDDR7 modules for a Blackwell device. Fills temps[]/present[] for up
+// to DQR_MAX_MODULES, returns the module count found and the hottest temp in
+// *hottest. A module counts as present only if all 4 DQR valid bits are set and
+// the data word is not the 0xBADF.... poison sentinel.
+static int gddr7_read_modules(uint32_t bar0, int temps[], int *hottest)
+{
+    int count = 0, hot = -128;
+    for (int p = 0; p < DQR_MAX_MODULES; p++)
+    {
+        uint32_t off = DQR_MODULE0 + (uint32_t)p * DQR_STRIDE;
+        uint32_t vld = 0, dq = 0;
+        if (read_bar0_reg(bar0, off + DQR_VLD_OFF, &vld) != 0) continue;
+        if (read_bar0_reg(bar0, off, &dq) != 0) continue;
+
+        int all_valid = (((vld >> 24) & 0xF) == 0xF);
+        int poison    = ((dq & 0xFFFF0000u) == 0xBADF0000u);
+        if (!all_valid || poison) continue;
+
+        int c = decode_temp(DECODE_GDDR_MRCODE, dq);
+        temps[count++] = c;
+        if (c > hot) hot = c;
+    }
+    *hottest = hot;
+    return count;
+}
+
+void gddr6_monitor_temperatures(int per_module)
+{
+   int temps[DQR_MAX_MODULES];
    while (1) {
         printf("\rVRAM Temps: |");
         for (uint32_t i = 0; i < ctx.num_devices; i++)
@@ -136,11 +213,31 @@ void gddr6_monitor_temperatures(void)
                 continue;
             }
 
-            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr  - ctx.devices[i].base_offset);
-            uint32_t read_result = *((uint32_t *)virt_addr);
-            uint32_t temp = ((read_result & 0x00000fff) / 0x20);
+            // Blackwell GDDR7: per-module DQR sensors. Default shows the hotspot
+            // (max across modules); --per-module lists each module.
+            if (ctx.devices[i].decode == DECODE_GDDR_MRCODE)
+            {
+                int hottest = 0;
+                int n = gddr7_read_modules(ctx.devices[i].bar0, temps, &hottest);
+                if (n == 0) { printf("  n/a |"); continue; }
 
-            printf(" %3u°C |", temp);
+                if (per_module)
+                {
+                    for (int m = 0; m < n; m++)
+                        printf(" m%d=%3d°C |", m, temps[m]);
+                }
+                else
+                {
+                    printf(" %3d°C (hotspot) |", hottest);
+                }
+                continue;
+            }
+
+            // Ada/Ampere: single pre-mapped VRAM register.
+            void *virt_addr = (uint8_t *) ctx.devices[i].mapped_addr + (ctx.devices[i].phys_addr - ctx.devices[i].base_offset);
+            uint32_t read_result = *((uint32_t *)virt_addr);
+            int temp = decode_temp(ctx.devices[i].decode, read_result);
+            printf(" %3d°C |", temp);
         }
         fflush(stdout);
         sleep(1);

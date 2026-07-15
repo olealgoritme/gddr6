@@ -2,3 +2,11 @@ gddr6
 build/
 *.o
 *.a
+
+# local reverse-engineering probes / scratch tools
+probe_*
+probe5090*
+scan_therm*
+measure_gentle*
+memload*
+!*.md
