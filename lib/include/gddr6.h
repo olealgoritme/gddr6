@@ -13,7 +13,7 @@ enum temp_decode {
 
 struct device
 {
-    uint32_t bar0;
+    uint64_t bar0;
     uint8_t bus, dev, func;
     uint32_t offset;
     enum temp_decode decode;  // how to turn the raw reg into Celsius
@@ -22,8 +22,8 @@ struct device
     const char *arch;
     const char *name;
     void *mapped_addr;
-    uint32_t phys_addr;
-    uint32_t base_offset;
+    uint64_t phys_addr;
+    uint64_t base_offset;
 };
 
 struct gddr6_ctx {

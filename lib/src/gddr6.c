@@ -1,4 +1,5 @@
 // gddr6.c
+#define _FILE_OFFSET_BITS 64
 #define _GNU_SOURCE
 
 #include "gddr6.h"
@@ -100,7 +101,8 @@ int gddr6_detect_compatible_gpus(void)
                   ctx.devices = new_devices;
 
                   ctx.devices[ctx.num_devices] = dev_table[i];
-                  ctx.devices[ctx.num_devices].bar0 = (pci_dev->base_addr[0] & 0xffffffff);
+                  ctx.devices[ctx.num_devices].bar0 =
+                      (uint64_t)(pci_dev->base_addr[0] & PCI_ADDR_MEM_MASK);
                   ctx.devices[ctx.num_devices].bus = pci_dev->bus;
                   ctx.devices[ctx.num_devices].dev = pci_dev->dev;
                   ctx.devices[ctx.num_devices].func = pci_dev->func;
@@ -118,9 +120,11 @@ void gddr6_memory_map(void)
     for (uint32_t i = 0; i < ctx.num_devices; i++)
     {
         ctx.devices[i].phys_addr = (ctx.devices[i].bar0 + ctx.devices[i].offset);
-        ctx.devices[i].base_offset = ctx.devices[i].phys_addr & ~(PG_SZ - 1);
+        ctx.devices[i].base_offset =
+            ctx.devices[i].phys_addr & ~((uint64_t)PG_SZ - 1);
 
-        ctx.devices[i].mapped_addr = mmap(0, PG_SZ, PROT_READ, MAP_SHARED, ctx.fd, ctx.devices[i].base_offset);
+        ctx.devices[i].mapped_addr = mmap(0, PG_SZ, PROT_READ, MAP_SHARED,
+                                          ctx.fd, (off_t)ctx.devices[i].base_offset);
         if (ctx.devices[i].mapped_addr == MAP_FAILED)
         {
             ctx.devices[i].mapped_addr = NULL;
@@ -164,12 +168,12 @@ static int decode_temp(enum temp_decode decode, uint32_t raw)
 
 // Read one 32-bit MMIO register at BAR0+off via a fresh read-only page mmap.
 // Returns 0 on success. Used only for the on-demand per-module GDDR7 reads.
-static int read_bar0_reg(uint32_t bar0, uint32_t off, uint32_t *out)
+static int read_bar0_reg(uint64_t bar0, uint32_t off, uint32_t *out)
 {
     long pg = PG_SZ;
     uint64_t phys = (uint64_t)bar0 + off;
     uint64_t base = phys & ~((uint64_t)pg - 1);
-    volatile void *map = mmap(0, pg, PROT_READ, MAP_SHARED, ctx.fd, base);
+    volatile void *map = mmap(0, pg, PROT_READ, MAP_SHARED, ctx.fd, (off_t)base);
     if (map == MAP_FAILED) return -1;
     *out = *(volatile uint32_t *)((const uint8_t *)map + (phys - base));
     munmap((void *)map, pg);
@@ -180,7 +184,7 @@ static int read_bar0_reg(uint32_t bar0, uint32_t off, uint32_t *out)
 // to DQR_MAX_MODULES, returns the module count found and the hottest temp in
 // *hottest. A module counts as present only if all 4 DQR valid bits are set and
 // the data word is not the 0xBADF.... poison sentinel.
-static int gddr7_read_modules(uint32_t bar0, int temps[], int *hottest)
+static int gddr7_read_modules(uint64_t bar0, int temps[], int *hottest)
 {
     int count = 0, hot = -128;
     for (int p = 0; p < DQR_MAX_MODULES; p++)
