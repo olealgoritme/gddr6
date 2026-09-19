@@ -71,6 +71,7 @@ sudo gddr6
 - RTX 4070 Super (AD104)
 - RTX 4070 (AD104)
 - RTX 4060 Max-Q / Mobile (AD107)
+- RTX 4060 Laptop (AD107)
 - RTX 3090 Ti (GA102)
 - RTX 3090 (GA102)
 - RTX 3080 Ti (GA102)
